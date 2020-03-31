@@ -26,4 +26,4 @@ const Comment = new Schema({
   },
 });
 
-mongoose.module("comments", Comment);
+mongoose.model("comments", Comment);

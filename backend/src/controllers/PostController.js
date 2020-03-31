@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 
 require('../models/Post');
+require('../models/Comment');
+
+const Comment = mongoose.model('comments');
 const Post = mongoose.model('posts');
 
 module.exports = {
@@ -34,10 +37,18 @@ module.exports = {
   delete (req, res) {
     const post_id = req.params.id;
 
-    Post.findOneAndDelete({_id: post_id}).then(() => {
-      return res.json({ success: 'Postagem deletada com sucesso.' });
+    Comment.find({post: post_id}).then((comments) => {
+      if (!comments) {
+        Post.deleteOne({_id: post_id}).then(() => { return res.status(200).json({ success: 'Postagem deletada com sucesso.' }); });
+      } else {
+        Comment.deleteMany({post: post_id}).then(() => {
+          Post.deleteOne({_id: post_id}).then(() => { return res.status(200).json({ success: 'Postagem deletada com sucesso.' }); });
+        }).catch((err) => {
+          return res.status(500).json({ error: 'Não foi possível encontrar os comentários. '});
+        });
+      }
     }).catch((err) => {
-      return res.status(500).json({ error: 'Não foi possível encontrar a postagem selecionada.'});
+      return res.status(500).json({ error: 'Não foi possível encontrar os comentários. '});
     });
-  }
+  },
 }
